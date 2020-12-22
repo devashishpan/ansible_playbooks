@@ -1,0 +1,66 @@
+---
+- name: CONFIGURING DOCKER
+  hosts: local
+  tasks:
+    - name: Adding Docker REPO
+      yum_repository:
+        name: docker_repo
+        description: Docker YUM repo
+        file: docker_repo
+        baseurl: https://download.docker.com/linux/centos/8/x86_64/stable/
+        gpgcheck: yes
+        gpgkey: https://download.docker.com/linux/centos/gpg
+
+    - name: Installing Docker Software
+      command: "yum install docker-ce docker-ce-cli containerd.io --nobest -y"
+
+    - name: Starting Docker Services
+      service:
+        name: "docker"
+        state: started
+        enabled: yes
+
+    - firewalld:
+        zone: trusted
+        interface: docker0
+        permanent: true
+        state: enabled
+        immediate: true
+
+    - firewalld:
+        zone: trusted
+        port: 4343/tcp
+        permanent: true
+        state: enabled
+        immediate: true
+
+    - name: Installing docker SDk
+      pip: 
+        name: docker-py>=1.7.0
+
+    - name: Pulling Httpd server image from docker hub
+      docker_image:
+        name: httpd
+        source: pull
+    
+    - name : Creating a httpd folder where html files will be placed.
+      file:
+        path: /var/www/html
+        state: directory
+
+    - name: Copying html file into /var/www/html folder
+      copy:
+        src: "mywebpage.html"
+        dest: "/var/www/html"
+    
+    - name: Launching a httpd server in a container
+      docker_container:
+        name: mywebserver
+        state: started
+        image: httpd
+        detach: true
+        interactive: true
+        ports:
+            - "8008:80"
+        volumes:
+            - /var/www/html/:/usr/local/apache2/htdocs/
