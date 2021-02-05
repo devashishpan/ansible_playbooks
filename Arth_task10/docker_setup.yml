@@ -20,20 +20,6 @@
         state: started
         enabled: yes
 
-    - firewalld:
-        zone: trusted
-        interface: docker0
-        permanent: true
-        state: enabled
-        immediate: true
-
-    - firewalld:
-        zone: trusted
-        port: 4343/tcp
-        permanent: true
-        state: enabled
-        immediate: true
-
     - name: Installing docker SDk
       pip: 
         name: docker-py>=1.7.0
